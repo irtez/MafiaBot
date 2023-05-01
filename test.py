@@ -1,4 +1,2 @@
-
-
-d = {1: 'a', 'd': 3}
-print(len(d))
+a = 'dayturn'
+print(a[0:-4])
