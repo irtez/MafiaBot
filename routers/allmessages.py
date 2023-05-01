@@ -31,24 +31,33 @@ async def editCreateMsg(chatid, mode):
     
     await EditMessageText(text=text, chat_id=chatid, message_id=gl[chatid]['createmsg'], reply_markup=kb)
 
+async def initGroup(chatid):
+    if not chatid in gl:
+        gl[chatid] = {}
+        gl[chatid]['settings'] = {'roles': ['Мирный', 'Мафия'], 'day_turn': 45, 'night_turn': 100}
+        gl[chatid]['created'] = 0
+        gl[chatid]['started'] = 0
+        gl[chatid]['playerslist'] = {}
 
 @router.message(Command('start'))
 async def start(message):
-    if not message.chat.id in gl:
-        gl[message.chat.id] = {}
+    await initGroup(chatid=message.chat.id)
     await message.answer('хуй')
+
+@router.message(Command('settinggs'))
+async def settings(message):
+    await initGroup(chatid=message.chat.id)
+    await message.answer('Выберите настройки для игры: ')
 
 @router.message(Command('create'))
 async def create(message):
-    if not message.chat.id in gl:
-        gl[message.chat.id] = {}
-    if 'created' in gl[message.chat.id] or 'started' in gl[message.chat.id]:
-        if gl[message.chat.id]['created'] == 1:
-            await message.answer('Лобби уже создано.')
-            return
-        if gl[message.chat.id]['started'] == 1:
-            await message.answer('Игра уже начата.')
-            return
+    await initGroup(chatid=message.chat.id)
+    if gl[message.chat.id]['created'] == 1:
+        await message.answer('Лобби уже создано.')
+        return
+    if gl[message.chat.id]['started'] == 1:
+        await message.answer('Игра уже начата.')
+        return
     gl[message.chat.id]['game_adm'] = message.from_user.id
     gl[message.chat.id]['playerslist'] = {}
     msg = await message.answer(text='Для присоединения к игре и запуска воспользуйтесь кнопками ниже.', reply_markup=keyboards.create_game())
