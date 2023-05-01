@@ -1,5 +1,5 @@
 from aiogram import Bot, Dispatcher
-from config import token
+from bottoken import token
 import routers.allmessages as allmsg
 from aiogram.fsm.storage.memory import MemoryStorage
 
