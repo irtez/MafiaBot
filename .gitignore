@@ -11,7 +11,7 @@
 *.sln.docstates
 __pycache__
 test.py
-config.py
+bottoken.py
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
