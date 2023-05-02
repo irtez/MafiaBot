@@ -14,11 +14,12 @@ def create_game():
 
 def settings():
     markup = InlineKeyboardBuilder()
-    markup.row(InlineKeyboardButton(text='Выбрать роли для игры', callback_data='change_roles'))
+    #markup.row(InlineKeyboardButton(text='Выбрать роли для игры', callback_data='change_roles'))
     markup.row(InlineKeyboardButton(text='Изменить время хода днём', callback_data='change_dayturn'))
     markup.row(InlineKeyboardButton(text='Изменить время хода ночью', callback_data='change_nightturn'))
     return markup.as_markup()
 
+"""
 def settings_roles(current_roles: list):
     markup = InlineKeyboardBuilder()
     i = 0
@@ -29,6 +30,7 @@ def settings_roles(current_roles: list):
         i += 1
     markup.row(InlineKeyboardButton(text='Назад', callback_data='change_backtomain'))
     return markup.as_markup()
+"""
 
 def settings_turn(day = True):
     markup = InlineKeyboardBuilder()
@@ -40,4 +42,10 @@ def settings_turn(day = True):
         if i % step == 0:
             markup.add(InlineKeyboardButton(text=i, callback_data=f'change_{s}turn_{i}'))
     markup.row(InlineKeyboardButton(text='Назад', callback_data='change_backtomain'))
+    return markup.as_markup()
+
+def golosovanie(players: dict):
+    markup = InlineKeyboardBuilder()
+    for playerid, playername in players:
+        markup.row(InlineKeyboardButton(text=playername, callback_data=f'vote {playerid}'))
     return markup.as_markup()
