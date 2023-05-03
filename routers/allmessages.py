@@ -61,7 +61,7 @@ async def roleDistrib(chatid: int | str):
     shuffle(members)
     group.players_roles['Мирные'] = []
     group.players_roles['Мафия'] = []
-    group.payers_roles['Дон'] = None
+    group.players_roles['Дон'] = None
     group.players_roles['Шериф'] = None
     group.players_roles['Доктор'] = None
     mirn_num = roles.count('Мирный')
@@ -72,7 +72,7 @@ async def roleDistrib(chatid: int | str):
     for i in range(maf_num):
         group.players_roles['Мафия'].append(members[i])
         members.pop(i)
-    d = zip(roles[mirn_num+maf_num-1:], members)
+    d = dict(zip(roles[mirn_num+maf_num:], members))
     for key in d:
         group.players_roles[key] = d[key]
     group.alive_players = copy.deepcopy(group.players_roles)
@@ -254,7 +254,7 @@ async def call_kill(call: CallbackQuery):
 async def game_main(chatid: int | str):
     group = gl[chatid]
     await roleDistrib(chatid)
-    members = group.playerslist.keys()
+    members = list(group.playerslist.keys())
     shuffle(members)
     await SendMessage(chat_id=chatid, text='Распределение ролей окончено, проверьте личные сообщения с ботом.'
                       ' Через 5 секунд начнется знакомство.')
@@ -429,7 +429,7 @@ async def call(call: CallbackQuery):
         await editCreateMsg(call.message.chat.id, 'player')
     elif call.data == 'start':
         if call.from_user.id == group.game_adm:
-            if len(group.playerslist) >= group.settings['min_players']\
+            if len(group.playerslist) >= config.min_players\
                     and len(group.playerslist) <= 10:
                 group.created = 0
                 group.started = 1
