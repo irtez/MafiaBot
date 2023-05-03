@@ -12,13 +12,7 @@
 __pycache__
 test.py
 bottoken.py
-conf.py
-index.rst
-make.bat
-Makefile
-_build
-_templates
-_static
+docs
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
