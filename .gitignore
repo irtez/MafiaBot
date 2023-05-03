@@ -12,6 +12,7 @@
 __pycache__
 test.py
 bottoken.py
+docs
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
