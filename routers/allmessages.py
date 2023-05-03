@@ -16,6 +16,9 @@ from random import shuffle, choice
 router = Router()
 router.message.filter(F.chat.type.in_(['group', 'supergroup']))
 
+#todo:
+#список игроков и список ролей при старте игры, шерифа и то что доктор может лечить себя и не может одного и того же 2 раза
+
 gl = {}
 
 class Group():
@@ -24,7 +27,7 @@ class Group():
         self.started = 0
         self.playerslist = {}
         self.players_roles = {}
-        self.settings = {'day_turn': 45, 'night_turn': 100, 'meet_time': 15}
+        self.settings = {'day_turn': 7, 'night_turn': 30, 'meet_time': 7}
         self.createmsg = None
         self.settingsmsg = None
         self.game_adm = None
@@ -43,7 +46,7 @@ async def roleDistrib(chatid: int | str):
     memb_num = len(members)
     match memb_num:
         case 3:
-            roles = ['Шериф', 'Доктор', 'Мафия']
+            roles = ['Мафия', 'Шериф', 'Доктор']
         case 4:
             roles = ['Мирный', 'Мирный', 'Мафия', 'Доктор']
         case 5:
@@ -89,12 +92,12 @@ async def meeting(chatid: int | str, members: list):
     for playerid in members:
         await SendMessage(chat_id=chatid, text=f'@{group.playerslist[playerid]}, ваша очередь.')
         try:
-            RestrictChatMember(chat_id=chatid, user_id=playerid, permissions={'can_send_messages': True})
+            await RestrictChatMember(chat_id=chatid, user_id=playerid, permissions={'can_send_messages': True})
         except:
             pass
         await asyncio.sleep(group.settings['meet_time'])
         try:
-            RestrictChatMember(chat_id=chatid, user_id=playerid, permissions={'can_send_messages': False})
+            await RestrictChatMember(chat_id=chatid, user_id=playerid, permissions={'can_send_messages': False})
         except:
             pass
 
@@ -102,14 +105,14 @@ async def night(chatid: int | str) -> (int | str):
     killed = None
     group = gl[chatid]
     group.night = 1
-    await asyncio.sleep(group.settings['night_turn']-10)
-    don = group.alive_players['Дон']
     doc = group.alive_players['Доктор']
-    group.night = 0
-    group.timetochoosemaf = 1
     if doc:
         await SendMessage(chat_id=doc, text='<b>Пора выбирать, кого спасти этой ночью.</b>\nУ вас есть 10 секунд. '
                           'Вы можете менять своё решение на протяжении этого времени.')
+    await asyncio.sleep(group.settings['night_turn']-10)
+    don = group.alive_players['Дон']
+    group.night = 0
+    group.timetochoosemaf = 1
     if don:
         await SendMessage(chat_id=don, text='<b>Пора выбирать, кого убивать этой ночью.</b>\nУ вас есть 10 секунд. '
                           'Вы можете менять своё решение на протяжении этого времени.')
@@ -121,6 +124,7 @@ async def night(chatid: int | str) -> (int | str):
     await asyncio.sleep(10)
     group.timetochoosemaf = 0
     group = gl[chatid]
+    print('maf and doc chose: ', group.mafia_chosen, '; ', group.doctor_chosen)
     repeats = {x: group.mafia_chosen.count(x) for x in group.mafia_chosen}
     max_votes = max(repeats.values())
     sum = 0
@@ -135,9 +139,15 @@ async def night(chatid: int | str) -> (int | str):
 
 async def lastWord(chatid: int | str, killed: int | str):
     group = gl[chatid]
-    await RestrictChatMember(chat_id=chatid, user_id=killed, permissions={'can_send_messages': True})
+    try:
+        await RestrictChatMember(chat_id=chatid, user_id=killed, permissions={'can_send_messages': True})
+    except:
+        pass
     await asyncio.sleep(20)
-    await RestrictChatMember(chat_id=chatid, user_id=killed, permissions={'can_send_messages': False})
+    try:
+        await RestrictChatMember(chat_id=chatid, user_id=killed, permissions={'can_send_messages': False})
+    except:
+        pass
     await SendMessage(chat_id=chatid, text='Время для последнего слова истекло.')
     if killed in group.alive_players['Мирные']:
         group.alive_players['Мирные'].remove(killed)
@@ -168,12 +178,12 @@ async def dayDiscuss(chatid: int | str, members: list):
     for playerid in members:
         await SendMessage(chat_id=chatid, text=f'@{group.playerslist[playerid]}, ваша очередь.')
         try:
-            RestrictChatMember(chat_id=chatid, user_id=playerid, permissions={'can_send_messages': True})
+            await RestrictChatMember(chat_id=chatid, user_id=playerid, permissions={'can_send_messages': True})
         except:
             pass
         await asyncio.sleep(group.settings['day_turn'])
         try:
-            RestrictChatMember(chat_id=chatid, user_id=playerid, permissions={'can_send_messages': False})
+            await RestrictChatMember(chat_id=chatid, user_id=playerid, permissions={'can_send_messages': False})
         except:
             pass
 
@@ -223,12 +233,12 @@ async def editVoteMsg(chatid: int | str, mode: str):
     for member in members:
         md[member] = group.playerslist[member]
     if mode == 'main':
-        for playerid, playername in md:
-            text += f"@{playername}: {group.votes[playerid]}\n"
+        for playerid in list(md.keys()):
+            text += f"@{md[playerid]}: {group.votes[playerid]}\n"
         kb = keyboards.golosovanie(md)
     elif mode == 'finished':
-        for playerid, playername in md:
-            text += f"@{playername}: {group.votes[playerid]}\n"
+        for playerid in list(md.keys()):
+            text += f"@{md[playerid]}: {group.votes[playerid]}\n"
         text += '<b>Голосование завершено.</b>'
         kb = None
     await EditMessageText(text=text, chat_id=chatid, message_id=group.votemsg, reply_markup=kb)
@@ -250,6 +260,13 @@ async def call_kill(call: CallbackQuery):
         else:
             await AnswerCallbackQuery(callback_query_id=call.id, text='Вы уже проголосовали.', show_alert=True)
 
+async def unmuteAll(chatid: int | str) -> None:
+    group = gl[chatid]
+    for playerid in (group.playerslist.keys()):
+        try:
+            await RestrictChatMember(chat_id=chatid, user_id=playerid, permissions={'can_send_messages': True})
+        except:
+            pass
 
 async def game_main(chatid: int | str):
     group = gl[chatid]
@@ -259,7 +276,10 @@ async def game_main(chatid: int | str):
     await SendMessage(chat_id=chatid, text='Распределение ролей окончено, проверьте личные сообщения с ботом.'
                       ' Через 5 секунд начнется знакомство.')
     for playerid in members:
-        await RestrictChatMember(chat_id=chatid, user_id=playerid, permissions={'can_send_messages': False})
+        try:
+            await RestrictChatMember(chat_id=chatid, user_id=playerid, permissions={'can_send_messages': False})
+        except:
+            pass
     await asyncio.sleep(5)
     await SendMessage(chat_id=chatid, text=f"Начинается знакомство. Каждому даётся {group.settings['meet_time']} секунд.")
     await meeting(chatid, members)
@@ -274,6 +294,7 @@ async def game_main(chatid: int | str):
             gameover = await winCheck(chatid)
             if gameover:
                 group.started = 0
+                await unmuteAll(chatid)
                 return
             await SendMessage(chat_id=chatid, text='Вам даётся 20 секунд на последнее слово.')
             await lastWord(chatid, killed)
@@ -294,6 +315,7 @@ async def game_main(chatid: int | str):
             gameover = await winCheck(chatid)
             if gameover:
                 group.started = 0
+                await unmuteAll(chatid)
                 return
             await SendMessage(chat_id=chatid, text='Вам даётся 20 секунд на последнее слово.')
             await lastWord(chatid, voted)
@@ -350,7 +372,29 @@ async def initGroup(chatid: int | str):
 @router.message(Command('start'))
 async def start(message: Message):
     await initGroup(chatid=message.chat.id)
-    await message.answer('хуй')
+    await message.answer(message.chat.type)
+
+@router.message(Command('mute'))
+async def mute(message: Message):
+    try:
+        await RestrictChatMember(chat_id=message.chat.id, user_id=message.from_user.id, permissions={'can_send_messages': False})
+    except BaseException as e:
+        print(e)
+    await asyncio.sleep(1)
+    try:
+        await RestrictChatMember(chat_id=message.chat.id, user_id=message.from_user.id, permissions={'can_send_messages': True})
+    except BaseException as e:
+        print(e)
+
+@router.message(Command('unmute'))
+async def unmute(message: Message):
+    ids = [273454910, 1727815289]
+    for p in ids:
+        try:
+            await RestrictChatMember(chat_id=message.chat.id, user_id=p, permissions={'can_send_messages': True})
+        except BaseException as e:
+            print(e)
+
 
 @router.message(Command('settings'))
 async def settings(message: Message):

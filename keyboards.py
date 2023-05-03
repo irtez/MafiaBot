@@ -46,6 +46,6 @@ def settings_turn(day = True):
 
 def golosovanie(players: dict):
     markup = InlineKeyboardBuilder()
-    for playerid, playername in players:
+    for playerid, playername in players.items():
         markup.row(InlineKeyboardButton(text=playername, callback_data=f'vote {playerid}'))
     return markup.as_markup()

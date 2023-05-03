@@ -49,23 +49,23 @@ async def spreadTheWord(message: Message) -> None:
                 alive_members = await makememblist(key, True)
                 for userid, username in group.playerslist.items():
                     if message.text == username and userid in alive_members:
-                        message.answer('Ваше решение принято. Вы можете его изменить до конца ночи.')
+                        await message.reply('Ваше решение принято. Вы можете его изменить до конца ночи.')
                         gl[key].doctor_chosen = userid
                     else:
-                        message.answer('Такого участника не найдено или он уже мёртв..')
+                        await message.reply('Такого участника не найдено или он уже мёртв..')
             elif group.timetochoosemaf == 1 and userid == group.alive_players['Дон']:
                 alive_members = await makememblist(key, False)
                 for userid, username in group.playerslist.items():
                     if message.text == username and userid in alive_members:
-                        message.answer('Ваше решение принято. Вы можете его изменить до конца ночи.')
+                        await message.reply('Ваше решение принято. Вы можете его изменить до конца ночи.')
                         gl[key].mafia_chosen.append(userid)
                     else:
-                        message.answer('Такого участника не найдено или он уже мёртв.')
+                        await message.reply('Такого участника не найдено или он уже мёртв.')
             elif group.timetochoosemaf == 1 and not group.alive_players['Дон'] and userid in group.alive_players['Мафия']:
                 alive_members = await makememblist(key, False)
                 for userid, username in group.playerslist.items():
                     if message.text == username and userid in alive_members:
-                        message.answer('Ваше решение принято. Вы можете его изменить до конца ночи.')
+                        await message.reply('Ваше решение принято. Вы можете его изменить до конца ночи.')
                         gl[key].mafia_chosen.append(userid)
                     else:
-                        message.answer('Такого участника не найдено или он уже мёртв.')
+                        await message.reply('Такого участника не найдено или он уже мёртв.')
