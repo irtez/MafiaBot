@@ -1,18 +1,30 @@
+"""Module that consists of of markups for specific messages.
+"""
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup
 import config
-#from aiogram.utils.keyboard import ReplyKeyboardBuilder
-#from aiogram.types.reply_keyboard_markup import ReplyKeyboardMarkup
-#from aiogram.types import KeyboardButton
 
-def create_game():
+def create_game() -> InlineKeyboardMarkup:
+    """This method is used to create initial markup.
+
+        :returns: Game start inline markup
+
+        :rtype: aiogram.types.InlineKeyboardMarkup
+    """
     markup = InlineKeyboardBuilder()
     markup.row(InlineKeyboardButton(text='Присоединиться к игре', callback_data='join'))
     markup.row(InlineKeyboardButton(text='Ливнуть', callback_data='discard'))
     markup.row(InlineKeyboardButton(text='Начать игру', callback_data='start'))
     return markup.as_markup()
 
-def settings():
+def settings() -> InlineKeyboardMarkup:
+    """This method is used to make settings markup.
+
+        :returns: Game settings inline markup
+
+        :rtype: aiogram.types.InlineKeyboardMarkup
+    """
     markup = InlineKeyboardBuilder()
     #markup.row(InlineKeyboardButton(text='Выбрать роли для игры', callback_data='change_roles'))
     markup.row(InlineKeyboardButton(text='Изменить время хода днём', callback_data='change_dayturn'))
@@ -32,7 +44,15 @@ def settings_roles(current_roles: list):
     return markup.as_markup()
 """
 
-def settings_turn(day = True):
+def settings_turn(day: bool) -> InlineKeyboardMarkup:
+    """This method is used to make turns length markup.
+
+        :param bool day: Are settings for day turn
+
+        :returns: Turns length inline markup
+
+        :rtype: aiogram.types.InlineKeyboardMarkup
+    """
     markup = InlineKeyboardBuilder()
     mint = 10 if day else 30
     maxt = 51 if day else 121
@@ -44,7 +64,15 @@ def settings_turn(day = True):
     markup.row(InlineKeyboardButton(text='Назад', callback_data='change_backtomain'))
     return markup.as_markup()
 
-def golosovanie(players: dict):
+def golosovanie(players: dict) -> InlineKeyboardMarkup:
+    """This method is used to make voting markup.
+
+        :param dict players: Dictionary with pairs player ID: player username
+
+        :returns: Voting inline markup
+
+        :rtype: aiogram.types.InlineKeyboardMarkup
+    """
     markup = InlineKeyboardBuilder()
     for playerid, playername in players.items():
         markup.row(InlineKeyboardButton(text=playername, callback_data=f'vote {playerid}'))

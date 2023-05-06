@@ -1,3 +1,5 @@
+"""Module for handling updates from Telegram groups/supergroups.
+"""
 from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.methods.edit_message_text import EditMessageText
@@ -22,7 +24,9 @@ router.message.filter(F.chat.type.in_(['group', 'supergroup']))
 gl = {}
 
 class Group():
+    """Class to store group data."""
     def __init__(self):
+        """Initialization of Group class and all the variables."""
         self.created = 0
         self.started = 0
         self.playerslist = {}
@@ -40,7 +44,13 @@ class Group():
         self.votes = {}
         self.voters = []
 
-async def roleDistrib(chatid: int | str):
+async def roleDistrib(chatid: int | str) -> None:
+    """This method is used to distribute roles among players when the game starts.
+
+        :param int | str chatid: ID of the chat where bot operates
+
+        :returns: None
+    """
     group = gl[chatid]
     members = list(group.playerslist.keys())
     memb_num = len(members)
@@ -87,7 +97,14 @@ async def roleDistrib(chatid: int | str):
         if group.players_roles[el]:
             await SendMessage(chat_id=group.players_roles[el], text=f'Ваша роль - {el}.')
 
-async def meeting(chatid: int | str, members: list):
+async def meeting(chatid: int | str, members: list) -> None:
+    """This method is used to host players meeting in the start of the game.
+
+        :param int | str chatid: ID of the chat where bot operates
+        :param list members: List of lobby members' IDs
+
+        :returns: None
+    """
     group = gl[chatid]
     for playerid in members:
         await SendMessage(chat_id=chatid, text=f'@{group.playerslist[playerid]}, ваша очередь.')
@@ -102,6 +119,14 @@ async def meeting(chatid: int | str, members: list):
             pass
 
 async def night(chatid: int | str) -> (int | str):
+    """This method is used to host night and determine what player will be killed if there is one.
+
+        :param int | str chatid: ID of the chat where bot operates
+
+        :returns: Killed player's ID
+
+        :rtype: int | str
+    """
     killed = None
     group = gl[chatid]
     group.night = 1
@@ -137,7 +162,14 @@ async def night(chatid: int | str) -> (int | str):
         killed = killedid
     return killed
 
-async def lastWord(chatid: int | str, killed: int | str):
+async def lastWord(chatid: int | str, killed: int | str) -> None:
+    """This method is used to host killed player's "last word" turn.
+
+        :param int | str chatid: ID of the chat where bot operates
+        :param int | str killed: Killed player's ID
+
+        :returns: None
+    """
     group = gl[chatid]
     try:
         await RestrictChatMember(chat_id=chatid, user_id=killed, permissions={'can_send_messages': True})
@@ -160,7 +192,16 @@ async def lastWord(chatid: int | str, killed: int | str):
     if killed == group.alive_players['Шериф']:
         group.alive_players['Шериф'] = None
 
-async def winCheck(chatid: int | str):
+async def winCheck(chatid: int | str) -> None:
+    """Checks if the game is over.
+        It is called after the night if someone is killed or after the voting if someone is hanged.
+
+        :param int | str chatid: ID of the chat where bot operates
+
+        :returns: Boolean variable if the game is over
+
+        :rtype: bool
+    """
     group = gl[chatid]
     sherif = 1 if group.alive_players['Шериф'] else 0
     doc = 1 if group.alive_players['Доктор'] else 0
@@ -173,7 +214,14 @@ async def winCheck(chatid: int | str):
         return True
     return False
     
-async def dayDiscuss(chatid: int | str, members: list):
+async def dayDiscuss(chatid: int | str, members: list) -> None:
+    """This method is used to host day discussion.
+
+        :param int | str chatid: ID of the chat where bot operates
+        :param list members: List of alive players' IDs
+
+        :returns: None
+    """
     group = gl[chatid]
     for playerid in members:
         await SendMessage(chat_id=chatid, text=f'@{group.playerslist[playerid]}, ваша очередь.')
@@ -187,7 +235,15 @@ async def dayDiscuss(chatid: int | str, members: list):
         except:
             pass
 
-async def golosovanie(chatid: int | str) -> int:
+async def golosovanie(chatid: int | str) -> (int | str | None):
+    """This method is used to host day voting.
+
+        :param int | str chatid: ID of the chat where bot operates
+
+        :returns: Hanged player's ID if there is one
+
+        :rtype: int | str | None
+    """
     votedid = None
     group = gl[chatid]
     members = []
@@ -214,7 +270,14 @@ async def golosovanie(chatid: int | str) -> int:
         votedid = [k for k, v in group.votes.items() if v == max_votes][0]
     return votedid
 
-async def editVoteMsg(chatid: int | str, mode: str):
+async def editVoteMsg(chatid: int | str, mode: str) -> None:
+    """This method is used to edit voting message according to inline keyboard usages.
+
+        :param int | str chatid: ID of the chat where bot operates
+        :param str mode: Mode in which the message will be edited
+
+        :returns: None
+    """
     group = gl[chatid]
     text = '<b>Распределение голосов:</b>\n'
     members = []
@@ -244,7 +307,13 @@ async def editVoteMsg(chatid: int | str, mode: str):
     await EditMessageText(text=text, chat_id=chatid, message_id=group.votemsg, reply_markup=kb)
 
 @router.callback_query(F.data.contains('vote'))
-async def call_kill(call: CallbackQuery):
+async def call_kill(call: CallbackQuery) -> None:
+    """This method is used to handle player's choices during day voting.
+
+        :param aiogram.types.callback_query.CallbackQuery call: Aiogram's CallbackQuery object
+
+        :returns: None
+    """
     chatid = call.message.chat.id
     group = gl[chatid]
     callerid = call.from_user.id
@@ -261,6 +330,12 @@ async def call_kill(call: CallbackQuery):
             await AnswerCallbackQuery(callback_query_id=call.id, text='Вы уже проголосовали.', show_alert=True)
 
 async def unmuteAll(chatid: int | str) -> None:
+    """This method is used to remove restrictions in chat for players after the game ends.
+
+        :param int | str chatid: ID of the chat where bot operates
+
+        :returns: None
+    """
     group = gl[chatid]
     for playerid in (group.playerslist.keys()):
         try:
@@ -268,7 +343,13 @@ async def unmuteAll(chatid: int | str) -> None:
         except:
             pass
 
-async def game_main(chatid: int | str):
+async def game_main(chatid: int | str) -> None:
+    """Main function for the game. Calls other functions when they are needed.
+
+        :param int | str chatid: ID of the chat where bot operates
+
+        :returns: None
+    """
     group = gl[chatid]
     await roleDistrib(chatid)
     members = list(group.playerslist.keys())
@@ -323,7 +404,14 @@ async def game_main(chatid: int | str):
         else:
             await SendMessage(chat_id=chatid, text='В результате голосования никто не был повешен.')
 
-async def editCreateMsg(chatid: int | str, mode: str):
+async def editCreateMsg(chatid: int | str, mode: str) -> None:
+    """This method is used to edit startup message.
+
+        :param int | str chatid: ID of the chat where bot operates
+        :param str mode: Mode in which startup message will be edited
+
+        :returns: None
+    """
     group = gl[chatid]
     text='Для присоединения к игре и запуска воспользуйтесь кнопками ниже.\n\n'
     if mode == 'player':
@@ -342,7 +430,14 @@ async def editCreateMsg(chatid: int | str, mode: str):
     
     await EditMessageText(text=text, chat_id=chatid, message_id=group.createmsg, reply_markup=kb)
 
-async def editSettingsMsg(chatid: int | str, mode: str):
+async def editSettingsMsg(chatid: int | str, mode: str) -> None:
+    """This method is used to edit settings message.
+
+        :param int | str chatid: ID of the chat where bot operates
+        :param str mode: Mode in which settings message will be edited
+
+        :returns: None
+    """
     group = gl[chatid]
     #text = '<b>Добавленные роли:</b>\n'
     #for role in group.settings['roles']:
@@ -359,23 +454,41 @@ async def editSettingsMsg(chatid: int | str, mode: str):
     #    kb = keyboards.settings_roles(group.settings['roles'])
     elif mode == 'change_dayturn':
         text += 'Выберите длительность хода днём:'
-        kb = keyboards.settings_turn()
+        kb = keyboards.settings_turn(True)
     elif mode == 'change_nightturn':
         text += 'Выберите длительность хода ночью:'
         kb = keyboards.settings_turn(False)
     await EditMessageText(text=text, chat_id=chatid, message_id=group.settingsmsg, reply_markup=kb)
 
-async def initGroup(chatid: int | str):
+async def initGroup(chatid: int | str) -> None:
+    """This method is used to initialize group data if it doesnt exist.
+
+        :param int | str chatid: ID of the chat where bot operates
+
+        :returns: None
+    """
     if not chatid in gl:
         gl[chatid] = Group()
 
 @router.message(Command('start'))
-async def start(message: Message):
+async def start(message: Message) -> None:
+    """Respond to /start command. Initializes group in memory and sends greeting message.
+
+        :param aiogrm.types.message.Message message: Aiogram Message object
+
+        :returns: None
+    """
     await initGroup(chatid=message.chat.id)
     await message.answer(message.chat.type)
 
 @router.message(Command('mute'))
-async def mute(message: Message):
+async def mute(message: Message) -> None:
+    """Respond to test command /mute, that prohibits the user to send messages.
+
+        :param aiogrm.types.message.Message message: Aiogram Message object
+
+        :returns: None
+    """
     try:
         await RestrictChatMember(chat_id=message.chat.id, user_id=message.from_user.id, permissions={'can_send_messages': False})
     except BaseException as e:
@@ -387,7 +500,13 @@ async def mute(message: Message):
         print(e)
 
 @router.message(Command('unmute'))
-async def unmute(message: Message):
+async def unmute(message: Message) -> None:
+    """Respond to test command /unmute, that allows user to send messages.
+
+        :param aiogrm.types.message.Message message: Aiogram Message object
+
+        :returns: None
+    """
     ids = [273454910, 1727815289]
     for p in ids:
         try:
@@ -397,7 +516,13 @@ async def unmute(message: Message):
 
 
 @router.message(Command('settings'))
-async def settings(message: Message):
+async def settings(message: Message) -> None:
+    """Respond to command /settings. Shows settings message.
+
+        :param aiogrm.types.message.Message message: Aiogram Message object
+
+        :returns: None
+    """
     await initGroup(chatid=message.chat.id)
     group = gl[message.chat.id]
     if group.started == 1:
@@ -408,7 +533,13 @@ async def settings(message: Message):
     await editSettingsMsg(message.chat.id, 'main')
 
 @router.message(Command('create'))
-async def create(message: Message):
+async def create(message: Message) -> None:
+    """Respond to command /create. Shows game startup message.
+
+        :param aiogrm.types.message.Message message: Aiogram Message object
+
+        :returns: None
+    """
     await initGroup(chatid=message.chat.id)
     group = gl[message.chat.id]
     if group.created == 1:
@@ -424,7 +555,13 @@ async def create(message: Message):
     group.created = 1
 
 @router.callback_query(F.data.contains('change_'))
-async def call_change(call: CallbackQuery):
+async def call_change(call: CallbackQuery) -> None:
+    """This method is used to handle users' settings management.
+
+        :param aiogrm.types.callback_query.CallbackQuery call: Aiogram CallbackQuery object
+
+        :returns: None
+    """
     chatid = call.message.chat.id
     group = gl[chatid]
     #if call.data == 'change_roles':
@@ -452,7 +589,13 @@ async def call_change(call: CallbackQuery):
         await editSettingsMsg(chatid, f'change_{time}turn')
 
 @router.callback_query()
-async def call(call: CallbackQuery):
+async def call(call: CallbackQuery) -> None:
+    """This method is used to handle all other CallbackQueries.
+
+        :param aiogrm.types.callback_query.CallbackQuery call: Aiogram CallbackQuery object
+
+        :returns: None
+    """
     group = gl[call.message.chat.id]
     if call.data == 'join':
         try:

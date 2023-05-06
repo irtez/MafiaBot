@@ -29,15 +29,25 @@
           <div class="body" role="main">
             
   <h1>Source code for nightturn</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">aiogram</span> <span class="kn">import</span> <span class="n">Router</span><span class="p">,</span> <span class="n">F</span>
+<span></span><span class="sd">&quot;&quot;&quot;Module for handling updates from private chats.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">aiogram</span> <span class="kn">import</span> <span class="n">Router</span><span class="p">,</span> <span class="n">F</span>
 <span class="kn">from</span> <span class="nn">aiogram.methods.send_message</span> <span class="kn">import</span> <span class="n">SendMessage</span>
 <span class="kn">from</span> <span class="nn">aiogram.types.message</span> <span class="kn">import</span> <span class="n">Message</span>
-
 
 <span class="n">router</span> <span class="o">=</span> <span class="n">Router</span><span class="p">()</span>
 <span class="n">router</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span><span class="s1">&#39;private&#39;</span><span class="p">]))</span>
 
 <div class="viewcode-block" id="makememblist"><a class="viewcode-back" href="../nightturn.html#nightturn.makememblist">[docs]</a><span class="k">async</span> <span class="k">def</span> <span class="nf">makememblist</span><span class="p">(</span><span class="n">chatid</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span> <span class="n">isDoctor</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;This method is used to make alive members list</span>
+
+<span class="sd">        :param int | str chatid: ID of the chat where bot operates</span>
+<span class="sd">        :param bool isDoctor: Is this list for a doctor</span>
+
+<span class="sd">        :returns: The list of IDs of alive players</span>
+
+<span class="sd">        :rtype: list</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">routers.allmessages</span> <span class="kn">import</span> <span class="n">gl</span>
     <span class="n">group</span> <span class="o">=</span> <span class="n">gl</span><span class="p">[</span><span class="n">chatid</span><span class="p">]</span>
     <span class="n">alive_members</span> <span class="o">=</span> <span class="p">[]</span>
@@ -56,6 +66,12 @@
 
 <div class="viewcode-block" id="spreadTheWord"><a class="viewcode-back" href="../nightturn.html#nightturn.spreadTheWord">[docs]</a><span class="nd">@router</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
 <span class="k">async</span> <span class="k">def</span> <span class="nf">spreadTheWord</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="n">Message</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;This method is used to handle private messages during night</span>
+
+<span class="sd">        :param aiogram.types.message.Message message: Telegram Message object</span>
+
+<span class="sd">        :returns: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">routers.allmessages</span> <span class="kn">import</span> <span class="n">gl</span>
     <span class="n">userid</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">id</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">gl</span><span class="p">:</span>
@@ -80,26 +96,26 @@
                 <span class="n">alive_members</span> <span class="o">=</span> <span class="k">await</span> <span class="n">makememblist</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">userid</span><span class="p">,</span> <span class="n">username</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">playerslist</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                     <span class="k">if</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="n">username</span> <span class="ow">and</span> <span class="n">userid</span> <span class="ow">in</span> <span class="n">alive_members</span><span class="p">:</span>
-                        <span class="n">message</span><span class="o">.</span><span class="n">answer</span><span class="p">(</span><span class="s1">&#39;Ваше решение принято. Вы можете его изменить до конца ночи.&#39;</span><span class="p">)</span>
+                        <span class="k">await</span> <span class="n">message</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="s1">&#39;Ваше решение принято. Вы можете его изменить до конца ночи.&#39;</span><span class="p">)</span>
                         <span class="n">gl</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">doctor_chosen</span> <span class="o">=</span> <span class="n">userid</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="n">message</span><span class="o">.</span><span class="n">answer</span><span class="p">(</span><span class="s1">&#39;Такого участника не найдено или он уже мёртв..&#39;</span><span class="p">)</span>
+                        <span class="k">await</span> <span class="n">message</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="s1">&#39;Такого участника не найдено или он уже мёртв..&#39;</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">group</span><span class="o">.</span><span class="n">timetochoosemaf</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">userid</span> <span class="o">==</span> <span class="n">group</span><span class="o">.</span><span class="n">alive_players</span><span class="p">[</span><span class="s1">&#39;Дон&#39;</span><span class="p">]:</span>
                 <span class="n">alive_members</span> <span class="o">=</span> <span class="k">await</span> <span class="n">makememblist</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">userid</span><span class="p">,</span> <span class="n">username</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">playerslist</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                     <span class="k">if</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="n">username</span> <span class="ow">and</span> <span class="n">userid</span> <span class="ow">in</span> <span class="n">alive_members</span><span class="p">:</span>
-                        <span class="n">message</span><span class="o">.</span><span class="n">answer</span><span class="p">(</span><span class="s1">&#39;Ваше решение принято. Вы можете его изменить до конца ночи.&#39;</span><span class="p">)</span>
+                        <span class="k">await</span> <span class="n">message</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="s1">&#39;Ваше решение принято. Вы можете его изменить до конца ночи.&#39;</span><span class="p">)</span>
                         <span class="n">gl</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">mafia_chosen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">userid</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="n">message</span><span class="o">.</span><span class="n">answer</span><span class="p">(</span><span class="s1">&#39;Такого участника не найдено или он уже мёртв.&#39;</span><span class="p">)</span>
+                        <span class="k">await</span> <span class="n">message</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="s1">&#39;Такого участника не найдено или он уже мёртв.&#39;</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">group</span><span class="o">.</span><span class="n">timetochoosemaf</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">group</span><span class="o">.</span><span class="n">alive_players</span><span class="p">[</span><span class="s1">&#39;Дон&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">userid</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">alive_players</span><span class="p">[</span><span class="s1">&#39;Мафия&#39;</span><span class="p">]:</span>
                 <span class="n">alive_members</span> <span class="o">=</span> <span class="k">await</span> <span class="n">makememblist</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
                 <span class="k">for</span> <span class="n">userid</span><span class="p">,</span> <span class="n">username</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">playerslist</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                     <span class="k">if</span> <span class="n">message</span><span class="o">.</span><span class="n">text</span> <span class="o">==</span> <span class="n">username</span> <span class="ow">and</span> <span class="n">userid</span> <span class="ow">in</span> <span class="n">alive_members</span><span class="p">:</span>
-                        <span class="n">message</span><span class="o">.</span><span class="n">answer</span><span class="p">(</span><span class="s1">&#39;Ваше решение принято. Вы можете его изменить до конца ночи.&#39;</span><span class="p">)</span>
+                        <span class="k">await</span> <span class="n">message</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="s1">&#39;Ваше решение принято. Вы можете его изменить до конца ночи.&#39;</span><span class="p">)</span>
                         <span class="n">gl</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">mafia_chosen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">userid</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="n">message</span><span class="o">.</span><span class="n">answer</span><span class="p">(</span><span class="s1">&#39;Такого участника не найдено или он уже мёртв.&#39;</span><span class="p">)</span></div>
+                        <span class="k">await</span> <span class="n">message</span><span class="o">.</span><span class="n">reply</span><span class="p">(</span><span class="s1">&#39;Такого участника не найдено или он уже мёртв.&#39;</span><span class="p">)</span></div>
 </pre></div>
 
           </div>
@@ -120,9 +136,11 @@
 <h3>Navigation</h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../dispatcher.html">dispatcher module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../main.html">main module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dispatcher.html">dispatcher module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../keyboards.html">keyboards module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../allmessages.html">allmessages module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nightturn.html">nightturn module</a></li>
 </ul>
 
 <div class="relations">

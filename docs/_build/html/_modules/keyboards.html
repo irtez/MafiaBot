@@ -29,21 +29,33 @@
           <div class="body" role="main">
             
   <h1>Source code for keyboards</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">aiogram.utils.keyboard</span> <span class="kn">import</span> <span class="n">InlineKeyboardBuilder</span>
+<span></span><span class="sd">&quot;&quot;&quot;Module that consists of of markups for specific messages.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">aiogram.utils.keyboard</span> <span class="kn">import</span> <span class="n">InlineKeyboardBuilder</span>
 <span class="kn">from</span> <span class="nn">aiogram.types</span> <span class="kn">import</span> <span class="n">InlineKeyboardButton</span>
+<span class="kn">from</span> <span class="nn">aiogram.types</span> <span class="kn">import</span> <span class="n">InlineKeyboardMarkup</span>
 <span class="kn">import</span> <span class="nn">config</span>
-<span class="c1">#from aiogram.utils.keyboard import ReplyKeyboardBuilder</span>
-<span class="c1">#from aiogram.types.reply_keyboard_markup import ReplyKeyboardMarkup</span>
-<span class="c1">#from aiogram.types import KeyboardButton</span>
 
-<div class="viewcode-block" id="create_game"><a class="viewcode-back" href="../keyboards.html#keyboards.create_game">[docs]</a><span class="k">def</span> <span class="nf">create_game</span><span class="p">():</span>
+<div class="viewcode-block" id="create_game"><a class="viewcode-back" href="../keyboards.html#keyboards.create_game">[docs]</a><span class="k">def</span> <span class="nf">create_game</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">InlineKeyboardMarkup</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;This method is used to create initial markup.</span>
+
+<span class="sd">        :returns: Game start inline markup</span>
+
+<span class="sd">        :rtype: aiogram.types.InlineKeyboardMarkup</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">markup</span> <span class="o">=</span> <span class="n">InlineKeyboardBuilder</span><span class="p">()</span>
     <span class="n">markup</span><span class="o">.</span><span class="n">row</span><span class="p">(</span><span class="n">InlineKeyboardButton</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s1">&#39;Присоединиться к игре&#39;</span><span class="p">,</span> <span class="n">callback_data</span><span class="o">=</span><span class="s1">&#39;join&#39;</span><span class="p">))</span>
     <span class="n">markup</span><span class="o">.</span><span class="n">row</span><span class="p">(</span><span class="n">InlineKeyboardButton</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s1">&#39;Ливнуть&#39;</span><span class="p">,</span> <span class="n">callback_data</span><span class="o">=</span><span class="s1">&#39;discard&#39;</span><span class="p">))</span>
     <span class="n">markup</span><span class="o">.</span><span class="n">row</span><span class="p">(</span><span class="n">InlineKeyboardButton</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s1">&#39;Начать игру&#39;</span><span class="p">,</span> <span class="n">callback_data</span><span class="o">=</span><span class="s1">&#39;start&#39;</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">markup</span><span class="o">.</span><span class="n">as_markup</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="settings"><a class="viewcode-back" href="../keyboards.html#keyboards.settings">[docs]</a><span class="k">def</span> <span class="nf">settings</span><span class="p">():</span>
+<div class="viewcode-block" id="settings"><a class="viewcode-back" href="../keyboards.html#keyboards.settings">[docs]</a><span class="k">def</span> <span class="nf">settings</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">InlineKeyboardMarkup</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;This method is used to make settings markup.</span>
+
+<span class="sd">        :returns: Game settings inline markup</span>
+
+<span class="sd">        :rtype: aiogram.types.InlineKeyboardMarkup</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">markup</span> <span class="o">=</span> <span class="n">InlineKeyboardBuilder</span><span class="p">()</span>
     <span class="c1">#markup.row(InlineKeyboardButton(text=&#39;Выбрать роли для игры&#39;, callback_data=&#39;change_roles&#39;))</span>
     <span class="n">markup</span><span class="o">.</span><span class="n">row</span><span class="p">(</span><span class="n">InlineKeyboardButton</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s1">&#39;Изменить время хода днём&#39;</span><span class="p">,</span> <span class="n">callback_data</span><span class="o">=</span><span class="s1">&#39;change_dayturn&#39;</span><span class="p">))</span>
@@ -63,7 +75,15 @@
 <span class="sd">    return markup.as_markup()</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="settings_turn"><a class="viewcode-back" href="../keyboards.html#keyboards.settings_turn">[docs]</a><span class="k">def</span> <span class="nf">settings_turn</span><span class="p">(</span><span class="n">day</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="settings_turn"><a class="viewcode-back" href="../keyboards.html#keyboards.settings_turn">[docs]</a><span class="k">def</span> <span class="nf">settings_turn</span><span class="p">(</span><span class="n">day</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InlineKeyboardMarkup</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;This method is used to make turns length markup.</span>
+
+<span class="sd">        :param bool day: Are settings for day turn</span>
+
+<span class="sd">        :returns: Turns length inline markup</span>
+
+<span class="sd">        :rtype: aiogram.types.InlineKeyboardMarkup</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">markup</span> <span class="o">=</span> <span class="n">InlineKeyboardBuilder</span><span class="p">()</span>
     <span class="n">mint</span> <span class="o">=</span> <span class="mi">10</span> <span class="k">if</span> <span class="n">day</span> <span class="k">else</span> <span class="mi">30</span>
     <span class="n">maxt</span> <span class="o">=</span> <span class="mi">51</span> <span class="k">if</span> <span class="n">day</span> <span class="k">else</span> <span class="mi">121</span>
@@ -75,9 +95,17 @@
     <span class="n">markup</span><span class="o">.</span><span class="n">row</span><span class="p">(</span><span class="n">InlineKeyboardButton</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s1">&#39;Назад&#39;</span><span class="p">,</span> <span class="n">callback_data</span><span class="o">=</span><span class="s1">&#39;change_backtomain&#39;</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">markup</span><span class="o">.</span><span class="n">as_markup</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="golosovanie"><a class="viewcode-back" href="../keyboards.html#keyboards.golosovanie">[docs]</a><span class="k">def</span> <span class="nf">golosovanie</span><span class="p">(</span><span class="n">players</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<div class="viewcode-block" id="golosovanie"><a class="viewcode-back" href="../keyboards.html#keyboards.golosovanie">[docs]</a><span class="k">def</span> <span class="nf">golosovanie</span><span class="p">(</span><span class="n">players</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">InlineKeyboardMarkup</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;This method is used to make voting markup.</span>
+
+<span class="sd">        :param dict players: Dictionary with pairs player ID: player username</span>
+
+<span class="sd">        :returns: Voting inline markup</span>
+
+<span class="sd">        :rtype: aiogram.types.InlineKeyboardMarkup</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">markup</span> <span class="o">=</span> <span class="n">InlineKeyboardBuilder</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">playerid</span><span class="p">,</span> <span class="n">playername</span> <span class="ow">in</span> <span class="n">players</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">playerid</span><span class="p">,</span> <span class="n">playername</span> <span class="ow">in</span> <span class="n">players</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">markup</span><span class="o">.</span><span class="n">row</span><span class="p">(</span><span class="n">InlineKeyboardButton</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="n">playername</span><span class="p">,</span> <span class="n">callback_data</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;vote </span><span class="si">{</span><span class="n">playerid</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">markup</span><span class="o">.</span><span class="n">as_markup</span><span class="p">()</span></div>
 </pre></div>
@@ -100,9 +128,11 @@
 <h3>Navigation</h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../dispatcher.html">dispatcher module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../main.html">main module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dispatcher.html">dispatcher module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../keyboards.html">keyboards module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../allmessages.html">allmessages module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nightturn.html">nightturn module</a></li>
 </ul>
 
 <div class="relations">

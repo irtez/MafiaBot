@@ -10,8 +10,8 @@ Welcome to MafiaBot's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   dispatcher
    main
+   dispatcher
    keyboards
    allmessages
    nightturn

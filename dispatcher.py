@@ -1,3 +1,5 @@
+"""Module for handling Telegram updates.
+"""
 from aiogram import Bot, Dispatcher
 from bottoken import token
 import routers.allmessages as allmsg

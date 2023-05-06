@@ -1,12 +1,22 @@
+"""Module for handling updates from private chats.
+"""
 from aiogram import Router, F
 from aiogram.methods.send_message import SendMessage
 from aiogram.types.message import Message
-
 
 router = Router()
 router.message.filter(F.chat.type.in_(['private']))
 
 async def makememblist(chatid: int | str, isDoctor: bool) -> list:
+    """This method is used to make alive members list
+
+        :param int | str chatid: ID of the chat where bot operates
+        :param bool isDoctor: Is this list for a doctor
+
+        :returns: The list of IDs of alive players
+
+        :rtype: list
+    """
     from routers.allmessages import gl
     group = gl[chatid]
     alive_members = []
@@ -25,6 +35,12 @@ async def makememblist(chatid: int | str, isDoctor: bool) -> list:
 
 @router.message(F.text)
 async def spreadTheWord(message: Message) -> None:
+    """This method is used to handle private messages during night
+
+        :param aiogram.types.message.Message message: Telegram Message object
+
+        :returns: None
+    """
     from routers.allmessages import gl
     userid = message.chat.id
     for key in gl:
