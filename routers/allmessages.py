@@ -474,7 +474,7 @@ async def initGroup(chatid: int | str) -> None:
 async def start(message: Message) -> None:
     """Respond to /start command. Initializes group in memory and sends greeting message.
 
-        :param aiogrm.types.message.Message message: Aiogram Message object
+        :param aiogram.types.message.Message message: Aiogram Message object
 
         :returns: None
     """
@@ -485,7 +485,7 @@ async def start(message: Message) -> None:
 async def mute(message: Message) -> None:
     """Respond to test command /mute, that prohibits the user to send messages.
 
-        :param aiogrm.types.message.Message message: Aiogram Message object
+        :param aiogram.types.message.Message message: Aiogram Message object
 
         :returns: None
     """
@@ -503,7 +503,7 @@ async def mute(message: Message) -> None:
 async def unmute(message: Message) -> None:
     """Respond to test command /unmute, that allows user to send messages.
 
-        :param aiogrm.types.message.Message message: Aiogram Message object
+        :param aiogram.types.message.Message message: Aiogram Message object
 
         :returns: None
     """
@@ -519,7 +519,7 @@ async def unmute(message: Message) -> None:
 async def settings(message: Message) -> None:
     """Respond to command /settings. Shows settings message.
 
-        :param aiogrm.types.message.Message message: Aiogram Message object
+        :param aiogram.types.message.Message message: Aiogram Message object
 
         :returns: None
     """
@@ -536,7 +536,7 @@ async def settings(message: Message) -> None:
 async def create(message: Message) -> None:
     """Respond to command /create. Shows game startup message.
 
-        :param aiogrm.types.message.Message message: Aiogram Message object
+        :param aiogram.types.message.Message message: Aiogram Message object
 
         :returns: None
     """
@@ -558,7 +558,7 @@ async def create(message: Message) -> None:
 async def call_change(call: CallbackQuery) -> None:
     """This method is used to handle users' settings management.
 
-        :param aiogrm.types.callback_query.CallbackQuery call: Aiogram CallbackQuery object
+        :param aiogram.types.callback_query.CallbackQuery call: Aiogram CallbackQuery object
 
         :returns: None
     """
@@ -592,7 +592,7 @@ async def call_change(call: CallbackQuery) -> None:
 async def call(call: CallbackQuery) -> None:
     """This method is used to handle all other CallbackQueries.
 
-        :param aiogrm.types.callback_query.CallbackQuery call: Aiogram CallbackQuery object
+        :param aiogram.types.callback_query.CallbackQuery call: Aiogram CallbackQuery object
 
         :returns: None
     """
