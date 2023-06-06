@@ -12,7 +12,9 @@ import asyncio
 import keyboards
 import config
 import copy
-from random import shuffle, choice
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import InlineKeyboardButton
+from random import shuffle, random
 
 
 router = Router()
@@ -31,7 +33,7 @@ class Group():
         self.started = 0
         self.playerslist = {}
         self.players_roles = {}
-        self.settings = {'day_turn': 7, 'night_turn': 30, 'meet_time': 7}
+        self.settings = {'day_turn': 10, 'night_turn': 40, 'meet_time': 10}
         self.createmsg = None
         self.settingsmsg = None
         self.game_adm = None
@@ -43,6 +45,8 @@ class Group():
         self.votemsg = None
         self.votes = {}
         self.voters = []
+        self.votersmsg = ""
+        self.rasprmsg = "Распределение ролей:\n"
 
 async def roleDistrib(chatid: int | str) -> None:
     """This method is used to distribute roles among players when the game starts.
@@ -60,11 +64,11 @@ async def roleDistrib(chatid: int | str) -> None:
         case 4:
             roles = ['Мирный', 'Мирный', 'Мафия', 'Доктор']
         case 5:
-            roles = ['Мирный', 'Мирный', 'Мафия', 'Доктор', 'Дон']
+            roles = ['Мирный', 'Мирный','Мирный', 'Мафия', 'Доктор']
         case 6:
             roles = ['Мирный', 'Мирный', 'Мафия', 'Доктор', 'Дон', 'Шериф']
         case 7:
-            roles = ['Мирный', 'Мирный', 'Мирный', 'Мафия', 'Мафия', 'Дон', 'Шериф']
+            roles = ['Мирный', 'Мирный', 'Мирный', 'Мафия', 'Дон', 'Доктор', 'Шериф']
         case 8:
             roles = ['Мирный', 'Мирный', 'Мирный', 'Мафия', 'Мафия', 'Дон', 'Шериф', 'Доктор']
         case 9:
@@ -89,13 +93,18 @@ async def roleDistrib(chatid: int | str) -> None:
     for key in d:
         group.players_roles[key] = d[key]
     group.alive_players = copy.deepcopy(group.players_roles)
+    group.rasprmsg = "Распределение ролей:\n"
     for pid in group.players_roles['Мирные']:
         await SendMessage(chat_id=pid, text='Ваша роль - Мирный.')
+        group.rasprmsg += f"{group.playerslist[pid]} - Мирный\n"
     for pid in group.players_roles['Мафия']:
         await SendMessage(chat_id=pid, text='Ваша роль - Мафия.')
+        group.rasprmsg += f"{group.playerslist[pid]} - Мафия\n"    
     for el in config.all_roles[2:]:
         if group.players_roles[el]:
             await SendMessage(chat_id=group.players_roles[el], text=f'Ваша роль - {el}.')
+            group.rasprmsg += f"{group.playerslist[group.players_roles[el]]} - {el}\n"
+    
 
 async def meeting(chatid: int | str, members: list) -> None:
     """This method is used to host players meeting in the start of the game.
@@ -131,22 +140,68 @@ async def night(chatid: int | str) -> (int | str):
     group = gl[chatid]
     group.night = 1
     doc = group.alive_players['Доктор']
+    hod_time = group.settings['night_turn']
+    sherif = group.alive_players['Шериф']
+
     if doc:
-        await SendMessage(chat_id=doc, text='<b>Пора выбирать, кого спасти этой ночью.</b>\nУ вас есть 10 секунд. '
-                          'Вы можете менять своё решение на протяжении этого времени.')
-    await asyncio.sleep(group.settings['night_turn']-10)
+        markupdoc = InlineKeyboardBuilder()
+        for playerid in group.alive_players.values():
+            try:
+                markupdoc.row(InlineKeyboardButton(text=group.playerslist[playerid], callback_data=f'{chatid} doc {playerid}'))
+            except BaseException as e:
+                print(e)
+        for playerid in group.alive_players['Мафия']:
+            markupdoc.row(InlineKeyboardButton(text=group.playerslist[playerid], callback_data=f'{chatid} doc {playerid}'))
+        for playerid in group.alive_players['Мирные']:
+            markupdoc.row(InlineKeyboardButton(text=group.playerslist[playerid], callback_data=f'{chatid} doc {playerid}'))
+        await SendMessage(chat_id=doc, text=f'<b>Пора выбирать, кого спасти этой ночью.</b>\nУ вас есть {hod_time} секунд. '
+                          , reply_markup=markupdoc.as_markup())
+    await asyncio.sleep(group.settings['night_turn']-hod_time)
+    if sherif:
+        markupsh = InlineKeyboardBuilder()
+        for playerid in group.alive_players.values():
+            try:
+                if playerid != group.alive_players['Шериф']:
+                    markupsh.row(InlineKeyboardButton(text=group.playerslist[playerid], callback_data=f'{chatid} sher {playerid}'))
+            except BaseException as e:
+                print(e)
+        for playerid in group.alive_players['Мафия']:
+            markupsh.row(InlineKeyboardButton(text=group.playerslist[playerid], callback_data=f'{chatid} sher {playerid}'))
+        for playerid in group.alive_players['Мирные']:
+            markupsh.row(InlineKeyboardButton(text=group.playerslist[playerid], callback_data=f'{chatid} sher {playerid}'))
+        await SendMessage(chat_id=sherif, text=f'<b>Выберите, кого проверить.</b>\nУ вас есть {hod_time} секунд. ',
+                          reply_markup=markupsh.as_markup())
     don = group.alive_players['Дон']
     group.night = 0
     group.timetochoosemaf = 1
     if don:
-        await SendMessage(chat_id=don, text='<b>Пора выбирать, кого убивать этой ночью.</b>\nУ вас есть 10 секунд. '
-                          'Вы можете менять своё решение на протяжении этого времени.')
+        markupdon = InlineKeyboardBuilder()
+        for playerid in group.alive_players.values():
+            if playerid != group.alive_players['Дон']:
+                try:
+                    markupdon.row(InlineKeyboardButton(text=group.playerslist[playerid], callback_data=f'{chatid} don {playerid}'))
+                except BaseException as e:
+                    print(e)
+        for playerid in group.alive_players['Мирные']:
+            markupdon.row(InlineKeyboardButton(text=group.playerslist[playerid], callback_data=f'{chatid} don {playerid}'))
+        await SendMessage(chat_id=don, text=f'<b>Пора выбирать, кого убивать этой ночью.</b>\nУ вас есть {hod_time} секунд. ',
+                          reply_markup=markupdon.as_markup())
     else:
+        markupmaf = InlineKeyboardBuilder()
+        for playerid in group.alive_players.values():
+            if playerid != group.alive_players['Дон']:
+                try:
+                    markupmaf.row(InlineKeyboardButton(text=group.playerslist[playerid], callback_data=f'{chatid} maf {playerid}'))
+                except BaseException as e:
+                    print(e)
+        for playerid in group.alive_players['Мирные']:
+            markupmaf.row(InlineKeyboardButton(text=group.playerslist[playerid], callback_data=f'{chatid} maf {playerid}'))
         for playerid in group.alive_players['Мафия']:
-            await SendMessage(chat_id=playerid, text='<b>Пора выбирать, кого убивать этой ночью.</b>\nУ вас есть 10 секунд. '
+            await SendMessage(chat_id=playerid, text=f'<b>Пора выбирать, кого убивать этой ночью.</b>\nУ вас есть {hod_time} секунд. '
                           'Вы можете менять своё решение на протяжении этого времени.\nТак как Дона нет в игре,'
-                          ' умрет тот, за кого мафия отдаст больше голосов. В случае равенства голосов никто не умрёт.')
-    await asyncio.sleep(10)
+                          ' умрет тот, за кого мафия отдаст больше голосов. В случае равенства голосов никто не умрёт.',
+                          reply_markup=markupmaf.as_markup())
+    await asyncio.sleep(hod_time)
     group.timetochoosemaf = 0
     group = gl[chatid]
     print('maf and doc chose: ', group.mafia_chosen, '; ', group.doctor_chosen)
@@ -181,16 +236,7 @@ async def lastWord(chatid: int | str, killed: int | str) -> None:
     except:
         pass
     await SendMessage(chat_id=chatid, text='Время для последнего слова истекло.')
-    if killed in group.alive_players['Мирные']:
-        group.alive_players['Мирные'].remove(killed)
-    if killed in group.alive_players['Мафия']:
-        group.alive_players['Мафия'].remove(killed)
-    if killed == group.alive_players['Доктор']:
-        group.alive_players['Доктор'] = None
-    if killed == group.alive_players['Дон']:
-        group.alive_players['Дон'] = None
-    if killed == group.alive_players['Шериф']:
-        group.alive_players['Шериф'] = None
+    
 
 async def winCheck(chatid: int | str) -> None:
     """Checks if the game is over.
@@ -206,12 +252,13 @@ async def winCheck(chatid: int | str) -> None:
     sherif = 1 if group.alive_players['Шериф'] else 0
     doc = 1 if group.alive_players['Доктор'] else 0
     don = 1 if group.alive_players['Дон'] else 0
-    if sum(group.alive_players['Мирные']) + sherif + doc <= sum(group.alive_players['Мафия']) + don:
-        await SendMessage(chat_id=chatid, text='Игра окончена. Победила мафия.')
+    if (len(group.alive_players['Мирные']) + sherif + doc) <= (len(group.alive_players['Мафия']) + don):
+        await SendMessage(chat_id=chatid, text=f'Игра окончена. Победила мафия.\n{group.rasprmsg}')
         return True
-    if sum(group.alive_players['Мафия']) + don == 0:
-        await SendMessage(chat_id=chatid, text='Игра окончена. Победили мирные жители.')
+    if (len(group.alive_players['Мафия']) + don) == 0:
+        await SendMessage(chat_id=chatid, text=f'Игра окончена. Победили мирные жители.\n{group.rasprmsg}')
         return True
+    
     return False
     
 async def dayDiscuss(chatid: int | str, members: list) -> None:
@@ -260,7 +307,7 @@ async def golosovanie(chatid: int | str) -> (int | str | None):
     for playerid in members:
         group.votes[playerid] = 0
     await editVoteMsg(chatid, 'main')
-    await asyncio.sleep(20)
+    await asyncio.sleep(15)
     max_votes = max(group.votes.values())
     sum = 0
     for key in group.votes:
@@ -268,6 +315,8 @@ async def golosovanie(chatid: int | str) -> (int | str | None):
             sum += 1
     if sum == 1:
         votedid = [k for k, v in group.votes.items() if v == max_votes][0]
+        group.votes[votedid] = 0
+    await editVoteMsg(chatid, 'finished')
     return votedid
 
 async def editVoteMsg(chatid: int | str, mode: str) -> None:
@@ -291,7 +340,7 @@ async def editVoteMsg(chatid: int | str, mode: str) -> None:
         members.append(group.alive_players['Дон'])
     if group.alive_players['Доктор']:
         members.append(group.alive_players['Доктор'])
-    shuffle(members)
+    #shuffle(members)
     md = {}
     for member in members:
         md[member] = group.playerslist[member]
@@ -300,8 +349,6 @@ async def editVoteMsg(chatid: int | str, mode: str) -> None:
             text += f"@{md[playerid]}: {group.votes[playerid]}\n"
         kb = keyboards.golosovanie(md)
     elif mode == 'finished':
-        for playerid in list(md.keys()):
-            text += f"@{md[playerid]}: {group.votes[playerid]}\n"
         text += '<b>Голосование завершено.</b>'
         kb = None
     await EditMessageText(text=text, chat_id=chatid, message_id=group.votemsg, reply_markup=kb)
@@ -324,7 +371,7 @@ async def call_kill(call: CallbackQuery) -> None:
             group.voters.append(callerid)
             voted = int(call.data.split()[1])
             group.votes[voted] += 1
-            await SendMessage(chat_id=chatid, text=f"@{call.from_user.username} отдаёт свой голос за {group.playerslist[voted]}.")
+            group.votersmsg += f"@{call.from_user.username} отдал свой голос за {group.playerslist[voted]}.\n"
             await editVoteMsg(chatid, 'main')
         else:
             await AnswerCallbackQuery(callback_query_id=call.id, text='Вы уже проголосовали.', show_alert=True)
@@ -352,6 +399,16 @@ async def game_main(chatid: int | str) -> None:
     """
     group = gl[chatid]
     await roleDistrib(chatid)
+    tt = "Все участники мафии:\n"
+    for playerid in group.alive_players['Мафия']:
+        tt += f'{group.playerslist[playerid]}\n'
+    if group.alive_players['Дон']:
+        tt += f'{group.playerslist[group.alive_players["Дон"]]} - дон\n'
+        await SendMessage(chat_id=group.alive_players['Дон'], text=tt)
+    for playerid in group.alive_players['Мафия']:
+        await SendMessage(chat_id=playerid, text=tt)
+    
+
     members = list(group.playerslist.keys())
     shuffle(members)
     await SendMessage(chat_id=chatid, text='Распределение ролей окончено, проверьте личные сообщения с ботом.'
@@ -371,6 +428,22 @@ async def game_main(chatid: int | str) -> None:
         group.mafia_chosen = []
         group.doctor_chosen = None
         if killed:
+            print(f'killed {killed}')
+            if killed in group.alive_players['Мирные']:
+                print(f'before remove in mir {group.alive_players["Мирные"]}')
+                group.alive_players['Мирные'].remove(killed)
+                print(f'after remove in mir {group.alive_players["Мирные"]}')
+            if killed in group.alive_players['Мафия']:
+                print(f'before remove in maf {group.alive_players["Мафия"]}')
+                group.alive_players['Мафия'].remove(killed)
+                print(f'after remove in maf {group.alive_players["Мафия"]}')
+            if killed == group.alive_players['Доктор']:
+                group.alive_players['Доктор'] = None
+            if killed == group.alive_players['Дон']:
+                group.alive_players['Дон'] = None
+            if killed == group.alive_players['Шериф']:
+                group.alive_players['Шериф'] = None
+            members.remove(killed)
             await SendMessage(chat_id=chatid, text=f'Этой ночью умер @{group.playerslist[killed]}.')
             gameover = await winCheck(chatid)
             if gameover:
@@ -379,28 +452,49 @@ async def game_main(chatid: int | str) -> None:
                 return
             await SendMessage(chat_id=chatid, text='Вам даётся 20 секунд на последнее слово.')
             await lastWord(chatid, killed)
-            members.remove(killed)
         else:
             await SendMessage(chat_id=chatid, text='Этой ночью никто не был убит.')
+        await asyncio.sleep(2)
         await SendMessage(chat_id=chatid, text="Начинается дневное обсуждение. Каждому игроку даётся"
                         f" {group.settings['day_turn']} секунд.")
+        await asyncio.sleep(2)
         await dayDiscuss(chatid, members)
         await SendMessage(chat_id=chatid, text='Дневное обсуждение закончилось. Начинается голосование длительностью 20 секунд.'
-                          '\n<b>Переголосовать нельзя.</b>')
+                          '\n<b>Переголосовать нельзя.\n В случае равенства голосов никто не будет повешен.</b>')
         msg = await SendMessage(chat_id=chatid, text='Распределение голосов:')
         group.votemsg = msg.message_id
+        group.votersmsg = ""
         voted = await golosovanie(chatid)
         group.voters = []
+        await asyncio.sleep(0.5)
+        await SendMessage(chat_id=chatid, text=group.votersmsg)
+        await asyncio.sleep(0.5)
         if voted:
+            print(f'voted {voted}')
+            if voted in group.alive_players['Мирные']:
+                print(f'before remove in mir {group.alive_players["Мирные"]}')
+                group.alive_players['Мирные'].remove(voted)
+                print(f'after remove in mir {group.alive_players["Мирные"]}')
+            if voted in group.alive_players['Мафия']:
+                print(f'before remove in maf {group.alive_players["Мафия"]}')
+                group.alive_players['Мафия'].remove(voted)
+                print(f'after remove in maf {group.alive_players["Мафия"]}')
+            if voted == group.alive_players['Доктор']:
+                group.alive_players['Доктор'] = None
+            if voted == group.alive_players['Дон']:
+                group.alive_players['Дон'] = None
+            if voted == group.alive_players['Шериф']:
+                group.alive_players['Шериф'] = None
+            members.remove(voted)
             await SendMessage(chat_id=chatid, text=f'В результате голосования был повешен @{group.playerslist[voted]}.')
             gameover = await winCheck(chatid)
             if gameover:
                 group.started = 0
                 await unmuteAll(chatid)
                 return
+            await asyncio.sleep(1)
             await SendMessage(chat_id=chatid, text='Вам даётся 20 секунд на последнее слово.')
             await lastWord(chatid, voted)
-            members.remove(voted)
         else:
             await SendMessage(chat_id=chatid, text='В результате голосования никто не был повешен.')
 
@@ -427,8 +521,10 @@ async def editCreateMsg(chatid: int | str, mode: str) -> None:
     elif mode == 'started':
         text = 'Игра запущена.'
         kb = None
-    
-    await EditMessageText(text=text, chat_id=chatid, message_id=group.createmsg, reply_markup=kb)
+    try:
+        await EditMessageText(text=text, chat_id=chatid, message_id=group.createmsg, reply_markup=kb)
+    except:
+        pass
 
 async def editSettingsMsg(chatid: int | str, mode: str) -> None:
     """This method is used to edit settings message.
@@ -479,7 +575,7 @@ async def start(message: Message) -> None:
         :returns: None
     """
     await initGroup(chatid=message.chat.id)
-    await message.answer(message.chat.type)
+    await message.answer('Для создания комнаты воспользуйтесь командой /create.\nДля изменения настроек воспользуйтесь /settings.')
 
 @router.message(Command('mute'))
 async def mute(message: Message) -> None:
@@ -596,7 +692,10 @@ async def call(call: CallbackQuery) -> None:
 
         :returns: None
     """
-    group = gl[call.message.chat.id]
+    try:
+        group = gl[call.message.chat.id]
+    except:
+        pass
     if call.data == 'join':
         try:
             await SendMessage(chat_id=call.from_user.id, text=f'Вы присоединились к игре в чате "{call.message.chat.title}".')
@@ -627,3 +726,24 @@ async def call(call: CallbackQuery) -> None:
                 await AnswerCallbackQuery(callback_query_id=call.id, text='Количество игроков ниже минимального.', show_alert=True)
         else:
             await AnswerCallbackQuery(callback_query_id=call.id, text='Вы не можете начать игру.', show_alert=True)
+    elif 'don' in call.data or 'doc' in call.data or 'maf' in call.data or 'sher' in call.data:
+        chatid = int(call.data.split()[0])
+        role = call.data.split()[1]
+        chosenplayer = int(call.data.split()[2])
+        group = gl[chatid]
+        if role == 'doc':
+            gl[chatid].doctor_chosen = chosenplayer
+            await EditMessageText(text=f'Вы решили вылечить игрока {group.playerslist[chosenplayer]}.',
+                                message_id=call.message.message_id, reply_markup=None, chat_id=call.message.chat.id)
+        elif role == 'don' or role == 'maf':
+            gl[chatid].mafia_chosen.append(chosenplayer)
+            await EditMessageText(text=f'Вы выбрали игрока {group.playerslist[chosenplayer]}.',
+                                message_id=call.message.message_id, reply_markup=None, chat_id=call.message.chat.id)
+        elif role == 'sher':
+            s = ""
+            if chosenplayer in group.alive_players['Мафия'] or chosenplayer == group.alive_players['Дон']:
+                s = 'мафия'
+            else:
+                s = 'мирный'
+            await EditMessageText(text=f'{group.playerslist[chosenplayer]} - {s}.',
+                                message_id=call.message.message_id, reply_markup=None, chat_id=call.message.chat.id)
